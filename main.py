@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # current_field[3][3].set_bomb()
     # print(current_field[3][3].is_bomb())
 
-    event_manager = EventManager()
+    event_manager = EventManager(game_cell, current_field)
     game_field = GameField(color=(0, 0, 0),
                            grid_color=(100, 255, 5),
                            game_cell=game_cell,

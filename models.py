@@ -16,17 +16,66 @@ class RectField(object):
         return self._width
 
 
+class Cell(RectField):
+    """Bomb or empty"""
+    def __init__(self, x, y, w, color = (255, 0, 0), bomb: bool = False, label: str = ""):
+        super().__init__(x, y, w, w, color)
+        self.__bomb = bomb
+        self.__label = label
+
+    def is_bomb(self) -> bool:
+        return self.__bomb
+
+    def set_bomb(self):
+        self.__bomb = True
+
+    def draw(self, surface):
+        font = pygame.font.Font("freesansbold.ttf", 14)
+        nearby_bombs = font.render(str(self.__label), True, (0, 255, 0))
+        surface.blit(nearby_bombs, (self._x + self._width * 0.43, (self._y + self._width * 0.43)))
+
+        if self.__bomb:
+            pygame.draw.rect(surface, self._color, [self._x+1, self._y+1, self._width-1, self._height-1],)
+
+    def get_label(self):
+        return self.__label
+
+    def set_label(self, label) -> None:
+        self.__label = label
+
+
 class EventManager(object):
+    def __init__(self, example_cell: Cell, field: list):
+        self.__example_cell = example_cell
+        self.__field = field
+
+    def get_click_cell(self, event):
+        return event.pos[0]//self.__example_cell.get_w(), event.pos[1] //\
+               self.__example_cell.get_w()
+
+    def get_surround_bombs(self, event) -> int:
+        surround_cells = [(-1, -1), (0, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1)]
+        x, y = self.get_click_cell(event)
+        s = 0
+        for cell in surround_cells:
+            try:
+                try_cell = list(map(sum, list(zip((x, y), cell))))
+                if self.__field[try_cell[1]][try_cell[0]].is_bomb():
+                    s += 1
+            except IndexError:
+                continue
+        return s
+
     def check_events(self) -> bool:
         for event in pygame.event.get():  # key mapping of the game
             # print(event)
             if event.type == pygame.QUIT:
                 return False
-            #
-            # if event.type == pygame.KEYDOWN:
-            #     try:
-            #         if event.key == pygame.K_RIGHT:
-            #             print(111)
+            if event.type == pygame.MOUSEBUTTONUP:
+                x, y = self.get_click_cell(event)
+                if not self.__field[y][x].is_bomb():
+                    if self.get_surround_bombs(event):
+                        self.__field[y][x].set_label(self.get_surround_bombs(event))
             #     except:
             #         1
             #         elif event.key == pygame.K_LEFT:
@@ -41,23 +90,6 @@ class EventManager(object):
                 # except IndexError:
                 #     pass
         return True
-
-
-class Cell(RectField):
-    """Bomb or empty"""
-    def __init__(self, x, y, w, color = (255, 0, 0), bomb: bool = False):
-        super().__init__(x, y, w, w, color)
-        self.__bomb = bomb
-
-    def is_bomb(self) -> bool:
-        return self.__bomb
-
-    def set_bomb(self):
-        self.__bomb = True
-
-    def draw(self, surface):
-        if self.__bomb:
-            pygame.draw.rect(surface, self._color, [self._x+1, self._y+1, self._width-1, self._height-1],)
 
 
 class FieldCoordinates(object):
