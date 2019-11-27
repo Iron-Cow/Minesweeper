@@ -1,4 +1,6 @@
 import pygame
+from random import randint
+
 
 
 class RectField(object):
@@ -14,6 +16,7 @@ class RectField(object):
 
     def get_w(self):
         return self._width
+
 
 
 class Cell(RectField):
@@ -35,10 +38,10 @@ class Cell(RectField):
             nearby_bombs = font.render(str(self.__label), True, (0, 255, 0))
             surface.blit(nearby_bombs, (self._x + self._width * 0.43, (self._y + self._width * 0.43)))
 
-        if self.__bomb:
-            pygame.draw.rect(surface, self._color, [self._x+1, self._y+1, self._width-1, self._height-1],)
+        # if self.__bomb:
+        #     pygame.draw.rect(surface, self._color, [self._x+1, self._y+1, self._width-1, self._height-1],)
 
-        elif self.__label == " ":
+        if self.__label == " ":
             pygame.draw.rect(surface, (100, 100, 100), [self._x + 1, self._y + 1, self._width - 1, self._height - 1], )
 
         elif self.__label == "flag":
@@ -81,6 +84,21 @@ class EventManager(object):
                     run = False
             window.blit(gameover,
                         (len(self.__field[0]) * self.__example_cell.get_w() // 3, len(self.__field) * self.__example_cell.get_w() // 2))
+            pygame.display.update()
+        return False
+
+    def win(self, window):
+        run = True
+        while run:
+            window.fill((0, 255, 0))
+            font = pygame.font.Font("freesansbold.ttf", 55)
+            win = font.render("CONGRATULATIONS!", True, (255, 255, 0))
+            for event in pygame.event.get():  # key mapping of the game
+                # print(event)
+                if event.type == pygame.QUIT:
+                    run = False
+            window.blit(win,
+                        (len(self.__field[0]) * self.__example_cell.get_w() // 5, len(self.__field) * self.__example_cell.get_w() // 2))
             pygame.display.update()
         return False
 
@@ -135,21 +153,32 @@ class EventManager(object):
                 break
         return True
 
-    def check_events(self, window) -> bool:
-        for event in pygame.event.get():  # key mapping of the game
-            # print(event)
-            if event.type == pygame.QUIT:
-                return False
-            if event.type == pygame.MOUSEBUTTONUP:
-                x, y = self.get_click_cell(event)
-                if event.button == 1:
-                    return self.open_cell(window, x, y)
-                elif event.button == 3:
-                    if self.__field[y][x].get_label() == "":
-                        self.__field[y][x].set_label("flag")
-                    elif self.__field[y][x].get_label() == "flag":
-                        self.__field[y][x].set_label("")
-        return True
+    def check_events(self, window, num_bombs) -> bool:
+        while True:
+            for event in pygame.event.get():  # key mapping of the game
+                # print(event)
+                if event.type == pygame.QUIT:
+                    return False
+                if event.type == pygame.MOUSEBUTTONUP:
+                    x, y = self.get_click_cell(event)
+                    if event.button == 1:
+                        return self.open_cell(window, x, y)
+                    elif event.button == 3:
+                        if self.__field[y][x].get_label() == "":
+                            self.__field[y][x].set_label("flag")
+                        elif self.__field[y][x].get_label() == "flag":
+                            self.__field[y][x].set_label("")
+            flag_count = 0
+            for row in self.__field:
+                for cell in row:
+                    if cell.get_label() == "":
+                        return True
+                    elif cell.get_label() == "flag":
+                        flag_count += 1
+            if flag_count == num_bombs:
+                return self.win(window)
+
+            return True
 
 
 class FieldCoordinates(object):

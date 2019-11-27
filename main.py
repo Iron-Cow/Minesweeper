@@ -4,6 +4,8 @@ from random import randint
 
 if __name__ == "__main__":
     run = True
+    num_bombs = 12
+    field_init = False
     pygame.init()
 
     game_cell = Cell(0, 0, 50, (255, 0, 0))  # example of the cell
@@ -12,7 +14,7 @@ if __name__ == "__main__":
     window = pygame.display.set_mode(size=(1+len(current_field[0])*game_cell.get_w(),
                                            1+len(current_field)*game_cell.get_w()))
     # Bomb filling
-    for _ in range(20):
+    for _ in range(num_bombs):
         while True:
             x = randint(0, len(current_field[0])-1)
             y = randint(0, len(current_field)-1)
@@ -38,7 +40,7 @@ if __name__ == "__main__":
         game_field.draw_grid(window)
         game_field.draw_cells(window)
 
-        run = event_manager.check_events(window)
-
+        run = event_manager.check_events(window, num_bombs)
+        field_init = bool(run)
         pygame.display.update()
 
